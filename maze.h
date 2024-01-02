@@ -19,6 +19,8 @@ static void smash_walls(int x, int y, int direction, int **horizontal_walls, int
 
 static void dfs(int x, int y, int xmax, int ymax, cell *top, int **horizontal_walls, int **vertical_walls, int **visited);
 
+static void clear_mem(int height, int **matrix);
+
 extern void print_maze(int width, int height, int **maze_matrix);
 
 extern int **generate_maze(int width, int height);

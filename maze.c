@@ -157,6 +157,13 @@ void dfs(int x, int y, int xmax, int ymax, cell *top, int **horizontal_walls, in
   }
 }
 
+void clear_mem(int height, int **matrix) {
+  for(int row = 0; row < height; row++) {
+    free(*(matrix + row));
+  }
+  free(matrix);
+}
+
 void print_maze(int width, int height, int **maze_matrix) {
   for(int row = 0; row < height; row++) {
     for(int column = 0; column < width; column++) {
@@ -176,6 +183,9 @@ int **generate_maze(int width, int height) {
   dfs(0, 0, height, width, top, horizontal_walls, vertical_walls, visited);
   
   int **maze = normalize_maze(width, height, horizontal_walls, vertical_walls);
+  clear_mem(height + 1, horizontal_walls);
+  clear_mem(height, vertical_walls);
+  clear_mem(height, visited);
   print_maze(2 * width + 1, 2 * height + 1, maze);
   return maze;
 }
