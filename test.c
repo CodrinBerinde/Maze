@@ -10,6 +10,7 @@ int main() {
   printf("Input seed: ");
   scanf("%d", &seed);
   srand(seed);
-  int **p = generate_maze(width, height);
+  int **maze = generate_maze(&width, &height);
+  print_maze(width, height, maze);
   return 0;
 }

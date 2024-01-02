@@ -23,6 +23,6 @@ static void clear_mem(int height, int **matrix);
 
 extern void print_maze(int width, int height, int **maze_matrix);
 
-extern int **generate_maze(int width, int height);
+extern int **generate_maze(int *width, int *height);
 
 #endif
