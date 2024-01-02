@@ -1,0 +1,27 @@
+#VRML_SIM R2023b utf8
+# Box wall 
+
+PROTO wall_proto [
+  field SFVec3f translation 0 0 0
+]
+{
+  Solid {
+    translation IS translation
+  rotation 0 0 1 0
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          ambientIntensity 0.5
+          diffuseColor 0.2 0.2 0.3
+        }
+      }
+      geometry DEF _WALL Box {
+        size 0.2 0.2 0.2
+      }
+    }
+  ]
+  name "wall_piece"
+  boundingObject USE _WALL
+  }
+}
