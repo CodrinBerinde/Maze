@@ -135,7 +135,7 @@ void smash_walls(int x, int y, int direction, int **horizontal_walls, int **vert
 
 void dfs(int x, int y, int xmax, int ymax, cell *top, int **horizontal_walls, int **vertical_walls, int **visited) {
   int xnew = x, ynew = y, direction;
-  if(top == NULL) {
+  if(is_empty(top)) {
     return;
   }
   direction = direction_choice(&xnew, &ynew, x, y, xmax, ymax, visited);
@@ -178,9 +178,9 @@ int **generate_maze(int *width, int *height) {
   visited = initialize_visited(*width, *height);
   initialize_walls(*width, *height, &horizontal_walls, &vertical_walls);
   cell *top = NULL;
-  top = stack_add(top, 0, 0);
-  *(*(visited)) = 1;
-  dfs(0, 0, *height, *width, top, horizontal_walls, vertical_walls, visited);
+  top = stack_add(top, *height - 1, *width - 1);
+  *(*(visited + *height - 1) + *width - 1) = 1;
+  dfs(*height - 1, *width - 1, *height, *width, top, horizontal_walls, vertical_walls, visited);
   
   int **maze = normalize_maze(*width, *height, horizontal_walls, vertical_walls);
   clear_mem(*height + 1, horizontal_walls);
