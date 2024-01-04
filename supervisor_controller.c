@@ -7,7 +7,8 @@
 
 #define TIME_STEP 32
 
-char position_string[100];
+char position_string[100], name_string[100];
+char floor_position_string[140];
 int width = 10, height = 10, seed = 17;
 float normalizer = 0.2;
 
@@ -24,8 +25,10 @@ int main(int argc, char **argv)
     srand(seed);
     int **maze = generate_maze(&width, &height);
 
+    sprintf(floor_position_string, "Basic_floor {translation %f %f 0, size %f %f}", 0.5 * normalizer * (-1 + width), 0.5 * normalizer * (-1 + height), normalizer * width, normalizer * height);              
+    wb_supervisor_field_import_mf_node_from_string(children_field, 2, floor_position_string);
 
-    spawn_maze(maze, 2 * width + 1, 2 * height + 1, WbFieldRef children_field = wb_supervisor_node_get_field(root_node, "children"););
+    spawn_maze(maze, width, height, children_field);
 
     while (wb_robot_step(TIME_STEP) != -1)
     {
