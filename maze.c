@@ -219,10 +219,7 @@ int *reconfigure_path(int xstop, int ystop, int **parent, int *length) {
   int curr_x = xstop, curr_y = ystop;
   int previous_direction = 0, actual_direction, i = 0;
   *length = 1;
-  //printf("Am inceput in %d, %d.\n", curr_x, curr_y);
   while(*(*(parent + curr_x) + curr_y) != -2) {
-    //printf("Ma regasesc in %d, %d.\n", curr_x, curr_y);
-    
     actual_direction = (*(*(parent + curr_x) + curr_y) + 2) % 4;
     previous_direction = *(*(parent + curr_x) + curr_y);
     curr_x = curr_x + relative_dir[actual_direction][0];
