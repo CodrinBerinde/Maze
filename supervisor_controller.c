@@ -11,11 +11,11 @@ char position_string[100];
 int width = 10, height = 10, seed = 17;
 float normalizer = 0.2;
 
-void spawn_maze(int **matrix, int rows, int collumns)
+void spawn_maze(int **matrix, int rows, int columns)
 {
 
     for (int i = 0; i < rows; i++)
-        for (int j = 0; j < collumns; j++)
+        for (int j = 0; j < columns; j++)
         {
             if (matrix[i][j] == 1)
             {
