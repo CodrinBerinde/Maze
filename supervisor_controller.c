@@ -1,6 +1,7 @@
 #include <webots/robot.h>
 #include <webots/supervisor.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "maze.h"
 #include "structures.h"
 
