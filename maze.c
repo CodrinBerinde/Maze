@@ -173,16 +173,21 @@ void print_maze(int width, int height, int **maze_matrix) {
   }
 }
 
-int **generate_maze(int *width, int *height) {
+int **generate_maze(int *width, int *height, int seed) {
   int **visited, **horizontal_walls, **vertical_walls;
+  int **maze;
+  cell *top = NULL;
+
+  srand(seed);
+
   visited = initialize_visited(*width, *height);
   initialize_walls(*width, *height, &horizontal_walls, &vertical_walls);
-  cell *top = NULL;
+
   top = stack_add(top, *height - 1, *width - 1);
   *(*(visited + *height - 1) + *width - 1) = 1;
   dfs(*height - 1, *width - 1, *height, *width, top, horizontal_walls, vertical_walls, visited);
   
-  int **maze = normalize_maze(*width, *height, horizontal_walls, vertical_walls);
+  maze = normalize_maze(*width, *height, horizontal_walls, vertical_walls);
   clear_mem(*height + 1, horizontal_walls);
   clear_mem(*height, vertical_walls);
   clear_mem(*height, visited);
