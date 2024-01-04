@@ -116,6 +116,18 @@ int **initialize_visited(int width, int height) {
   return visited;
 }
 
+int **initialize_parent(int width, int height, int xstart, int ystart) {
+  int **parent = (int **)calloc(sizeof(int *), height);
+  for(int row = 0; row < height; row++) {
+    *(parent + row) = (int *)calloc(sizeof(int), width);
+    for(int column = 0; column < width; column++) {
+      *(*(parent + row) + column) = -1;
+    }
+  }
+  *(*(parent + xstart) + ystart) = -2;
+  return parent;
+}
+
 void smash_walls(int x, int y, int direction, int **horizontal_walls, int **vertical_walls) {
   switch(direction) {
     case 0:
@@ -157,11 +169,80 @@ void dfs(int x, int y, int xmax, int ymax, cell *top, int **horizontal_walls, in
   }
 }
 
+int is_valid_direction(int x, int y, int width, int height, int **maze, int **parent) {
+  return (in_matrix(x, y, height, width) &&
+          (*(*(maze + x) + y) == 0) &&
+          (*(*(parent + x) + y) == -1));
+}
+
+void bfs(int xstart, int ystart, int width, int height, int **maze, int **parent) {
+  cell *front = queue_add(NULL, xstart, ystart);
+  cell *back = front;
+  
+  while(!is_empty(front)) {
+    int curr_x = front->x;
+    int curr_y = front->y;
+  
+    //we test all the four directions
+    for(int direction = 0; direction < 4; direction++) {
+      int new_x = curr_x + relative_dir[direction][0];
+      int new_y = curr_y + relative_dir[direction][1];
+      if(is_valid_direction(new_x, new_y, width, height, maze, parent)) {
+        *(*(parent + new_x) + new_y) = direction;
+        back = queue_add(back, new_x, new_y);
+      }
+    }
+    front = rem(front);
+  }
+}
+
 void clear_mem(int height, int **matrix) {
   for(int row = 0; row < height; row++) {
     free(*(matrix + row));
   }
   free(matrix);
+}
+
+int direction_relativization(int current_dir, int prev_dir) {
+  if(current_dir == prev_dir) { //forward
+    return 0;
+  }
+  if((current_dir + 4 - prev_dir) % 4 == 1) { //turn left
+    return 2;
+  }
+  //turn left
+  return 1;
+}
+
+int *reconfigure_path(int xstop, int ystop, int **parent, int *length) {
+  cell *top = stack_add(NULL, 0, 0);
+  int curr_x = xstop, curr_y = ystop;
+  int previous_direction = 0, actual_direction, i = 0;
+  *length = 1;
+  //printf("Am inceput in %d, %d.\n", curr_x, curr_y);
+  while(*(*(parent + curr_x) + curr_y) != -2) {
+    //printf("Ma regasesc in %d, %d.\n", curr_x, curr_y);
+    
+    actual_direction = (*(*(parent + curr_x) + curr_y) + 2) % 4;
+    previous_direction = *(*(parent + curr_x) + curr_y);
+    curr_x = curr_x + relative_dir[actual_direction][0];
+    curr_y = curr_y + relative_dir[actual_direction][1];
+    top = stack_add(top, direction_relativization(*(*(parent + curr_x) + curr_y), previous_direction), 0);
+    (*length)++;
+  }
+  
+  int *path = (int *)calloc(sizeof(int), *length);
+  while(!is_empty(top)) {
+    *(path + i) = top->x;
+    i++;
+    top = rem(top);
+  }
+  //the first element is 0
+  *path = 0;
+  //the last element marks the end, and is -1
+  *(path + *length - 1) = -1;
+
+  return path;
 }
 
 void print_maze(int width, int height, int **maze_matrix) {
@@ -194,4 +275,14 @@ int **generate_maze(int *width, int *height, int seed) {
   *height = 2 * *height + 1;
   *width = 2 * *width + 1;
   return maze;
+}
+
+int *solve_maze(int width, int height, int **maze, int xstart, int ystart, int xstop, int ystop) {
+  int **parent = initialize_parent(width, height, xstart, ystart);
+  int length = 0;
+  bfs(xstart, ystart, width, height, maze, parent);
+
+  int *path = reconfigure_path(xstop, ystop, parent, &length);
+  clear_mem(height, parent);
+  return path;
 }
