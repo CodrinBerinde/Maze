@@ -147,23 +147,19 @@ void smash_walls(int x, int y, int direction, int **horizontal_walls, int **vert
 
 void dfs(int x, int y, int xmax, int ymax, cell *top, int **horizontal_walls, int **vertical_walls, int **visited) {
   int xnew = x, ynew = y, direction;
-  if(is_empty(top)) {
-    return;
-  }
+
   direction = direction_choice(&xnew, &ynew, x, y, xmax, ymax, visited);
   if(direction != -1) {
     *(*(visited + xnew) + ynew) = 1;
-    top = stack_add(top, xnew, ynew);
-    
+    top = stack_add(top, x, y);
     smash_walls(xnew, ynew, direction, horizontal_walls, vertical_walls);
-    
     dfs(xnew, ynew, xmax, ymax, top, horizontal_walls, vertical_walls, visited);
   }
   else {
-    top = rem(top);
-    if(top != NULL) {
+    if(!is_empty(top)) {
       xnew = top->x;
       ynew = top->y;
+      top = rem(top);
       dfs(xnew, ynew, xmax, ymax, top, horizontal_walls, vertical_walls, visited);
     }
   }
@@ -261,7 +257,6 @@ int **generate_maze(int *width, int *height, int seed) {
   visited = initialize_visited(*width, *height);
   initialize_walls(*width, *height, &horizontal_walls, &vertical_walls);
 
-  top = stack_add(top, *height - 1, *width - 1);
   *(*(visited + *height - 1) + *width - 1) = 1;
   dfs(*height - 1, *width - 1, *height, *width, top, horizontal_walls, vertical_walls, visited);
   
