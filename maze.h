@@ -7,9 +7,9 @@ static int random_dir(int max_dir);
 
 static int in_matrix(int x, int y, int xmax, int ymax);
 
-static int **normalize_maze(int width, int height, int **horizontal_walls, int **vertical_walls);
+static int **normalize_maze(int *width, int *height, int **horizontal_walls, int **vertical_walls);
 
-static int direction_choice(int *xnew, int *ynew, int x, int y, int xmax, int ymax, int **visited);
+static int direction_choice(int *x, int *y, int xmax, int ymax, int **visited);
 
 static void initialize_walls(int width, int height, int ***horizontal_walls, int ***vertical_walls);
 
@@ -19,7 +19,9 @@ static int **initialize_parent(int width, int height, int xstart, int ystart);
 
 static void smash_walls(int x, int y, int direction, int **horizontal_walls, int **vertical_walls);
 
-static void dfs(int x, int y, int xmax, int ymax, cell *top, int **horizontal_walls, int **vertical_walls, int **visited);
+static void iterative_dfs(int x, int y, int xmax, int ymax, int **horizontal_walls, int **vertical_walls, int **visited);
+
+static void recursive_dfs(int x, int y, int xmax, int ymax, int **horizontal_walls, int **vertical_walls, int **visited);
 
 static int is_valid_direction(int x, int y, int width, int height, int **maze, int **parent);
 
@@ -29,7 +31,7 @@ static void clear_mem(int height, int **matrix);
 
 static int direction_relativization(int current_dir, int prev_dir);
 
-static int *reconfigure_path(int xstop, int ystop, int **parent, int *length);
+static int *recover_path(int xstop, int ystop, int **parent);
 
 extern void print_maze(int width, int height, int **maze_matrix);
 
