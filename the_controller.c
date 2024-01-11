@@ -35,9 +35,6 @@ int main(int argc, char **argv) {
   double left_speed = SPEED, right_speed = SPEED;
   double *position, *orientation;
   int step = 0;
-  
-
-  //int width = 5, height = 5, seed = 23;
 
   wb_motor_set_velocity(fr_motor, 0);
   wb_motor_set_velocity(fl_motor, 0);
