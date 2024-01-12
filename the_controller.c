@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
   while ((path[step] != -1)){
     //the things that wee need at each time step (might need to be moved inside a while loop below)
     position = wb_gps_get_values(gps);   //position[0] stores the x value, position[1] stroes the y value
-    orientation = wb_compass_get_values(compass); //orientation[0] stores the direction relative to positive Y axis
+    orientation = wb_compass_get_values(compass); //orientation[0] stores the direction relative to positive Y axis, orientation[1] relative to X axis
 //for each value of path we move the robot:
     if ((path[step] == 0) && (cos(orientation[0]) > 0.9)) //moves along x axis
     {
@@ -133,11 +133,9 @@ int main(int argc, char **argv) {
     
     if ((path[step] == 0) && (cos(orientation[0]) < 0.6)) //moves along y axis
     {
-      int correction = 1;
       if(position[1] - ycoord[step + 1] < 0)
         correction = -1;
       else correction = 1;
-      printf("before while\n");
       while (correction * (position[1] - ycoord[step + 1]) >= 0.001) //the robot hasn't touched the line defined by ycoord[step]
       {
         wb_motor_set_velocity(fr_motor, SPEED);
