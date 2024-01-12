@@ -19,6 +19,8 @@
 #define WHEEL 0.04
 #define RATIO 1.531
 
+double modulus(double value);
+
 float xcoord[100], ycoord[100];
 
 int main(int argc, char **argv) {
@@ -34,7 +36,10 @@ int main(int argc, char **argv) {
 //the variables that wee need to use:  
   double left_speed = SPEED, right_speed = SPEED;
   double *position, *orientation;
-  int step = 0;
+  int step = 0, correction = 1;
+  
+
+  //int width = 5, height = 5, seed = 23;
 
   wb_motor_set_velocity(fr_motor, 0);
   wb_motor_set_velocity(fl_motor, 0);
@@ -108,36 +113,122 @@ int main(int argc, char **argv) {
   }
 
 //the main loop
-  while (wb_robot_step(TIME_STEP) != -1) {
+  while ((path[step] != -1)){
     //the things that wee need at each time step (might need to be moved inside a while loop below)
     position = wb_gps_get_values(gps);   //position[0] stores the x value, position[1] stroes the y value
     orientation = wb_compass_get_values(compass); //orientation[0] stores the direction relative to positive Y axis
 //for each value of path we move the robot:
     if ((path[step] == 0) && (cos(orientation[0]) > 0.9)) //moves along x axis
     {
-      int correction = 1;
-      if(position[0] - xcoord[step] < 0)
-        correction = 1;
-      else correction = -1;
-      printf("before while\n");
-      while (correction * (position[0] - xcoord[step]) <= -0.001) //the robot hasn't touched the line defined by xcoord[step]
+      
+      if(position[0] - xcoord[step + 1] < 0)
+        correction = -1;
+      else correction = 1;
+      printf("correction is %d\n", correction);
+      while (correction * (position[0] - xcoord[step + 1]) >= 0.001) //the robot hasn't touched the line defined by xcoord[step]
       {
         wb_motor_set_velocity(fr_motor, SPEED);
         wb_motor_set_velocity(fl_motor, SPEED); 
         wb_robot_step(TIME_STEP);  //send this data to the simulation (and receive the new data for computing); the simulation runs for TIME_STEP ms
         position = wb_gps_get_values(gps);
-        printf("the position of the robot obtained inside our while loop is %lf\n", position[0]);
+        printf("1 correction * (position[0] - xcoord[%d + 1]) = %lf\n", step, correction * (position[0] - xcoord[step + 1]));
       }
-      printf("after while\n");
-      step++;     //acest if este responsabil de deplasarea robotului inainte de-a lungul axei x. Mai trebuie facut asemanator pentru axa y si pentru luat curba
+      step++; 
+      printf("1after while, path[%d] is %d\n", step, path[step]);    //acest if este responsabil de deplasarea robotului inainte de-a lungul axei x. Mai trebuie facut asemanator pentru axa y si pentru luat curba
                   //trebuie verificat daca merge cand robotul merge spre x negativ. Cred ca doar cateva ifuri din astea mai trebuie si gata :)
     }
     
+    if ((path[step] == 0) && (cos(orientation[0]) < 0.6)) //moves along y axis
+    {
+      int correction = 1;
+      if(position[1] - ycoord[step + 1] < 0)
+        correction = -1;
+      else correction = 1;
+      printf("before while\n");
+      while (correction * (position[1] - ycoord[step + 1]) >= 0.001) //the robot hasn't touched the line defined by ycoord[step]
+      {
+        wb_motor_set_velocity(fr_motor, SPEED);
+        wb_motor_set_velocity(fl_motor, SPEED); 
+        wb_robot_step(TIME_STEP);  //send this data to the simulation (and receive the new data for computing); the simulation runs for TIME_STEP ms
+        position = wb_gps_get_values(gps);
+        printf("0the position of the robot obtained inside our while loop is %lf\n", position[1]);
+      }
+      step++; 
+      printf("0after while, path[%d] is %d\n", step, path[step]);    //acest if este responsabil de deplasarea robotului inainte de-a lungul axei x. Mai trebuie facut asemanator pentru axa y si pentru luat curba
+                  //trebuie verificat daca merge cand robotul merge spre x negativ. Cred ca doar cateva ifuri din astea mai trebuie si gata :)
+    }
+
+//faci la fel si pentry axa y daca e bun asta de mai sus
+
+//pentru luat curba:
+    if ((path[step] == 1) && (cos(orientation[0]) > 0.9)) //currently moves along x axis and wants to move along y axis
+    {
+        while (modulus(orientation[0]) <= 0.9999)
+        {
+            wb_motor_set_velocity(fr_motor, SPEED);
+            wb_motor_set_velocity(fl_motor, RATIO * SPEED); 
+            wb_robot_step(TIME_STEP);  //send this data to the simulation (and receive the new data for computing); the simulation runs for TIME_STEP ms
+            orientation = wb_compass_get_values(compass);
+            printf("2the orientation of the robot obtained inside our while loop is %lf\n", orientation[0]);
+        }
+        step++;
+        printf("2after while, path[%d] is %d\n", step, path[step]);
+    }
+    
+    if ((path[step] == 1) && (cos(orientation[0]) < 0.6)) //currently moves along y axis and wants to move along x axis
+    {
+        while (modulus(orientation[0]) >= 0.002)
+        {
+            wb_motor_set_velocity(fr_motor, SPEED);
+            wb_motor_set_velocity(fl_motor, RATIO * SPEED); 
+            wb_robot_step(TIME_STEP);  //send this data to the simulation (and receive the new data for computing); the simulation runs for TIME_STEP ms
+            orientation = wb_compass_get_values(compass);
+            printf("3the orientation of the robot obtained inside our while loop is %lf\n", orientation[0]);
+        }
+        step++;
+        printf("3after while, path[%d] is %d\n", step, path[step]);
+    }
+    if ((path[step] == 2) && (cos(orientation[0]) > 0.9)) //currently moves along x axis and wants to move along y axis
+    {
+        while (modulus(orientation[0]) <= 0.9999) //turn left
+        {
+            wb_motor_set_velocity(fr_motor, RATIO * SPEED);
+            wb_motor_set_velocity(fl_motor, SPEED); 
+            wb_robot_step(TIME_STEP);  //send this data to the simulation (and receive the new data for computing); the simulation runs for TIME_STEP ms
+            orientation = wb_compass_get_values(compass);
+            printf("4the orientation of the robot obtained inside our while loop is %lf\n", orientation[0]);
+        }
+        step++;
+        printf("4after while, path[%d] is %d\n", step, path[step]);
+    }
+    if ((path[step] == 2) && (cos(orientation[0]) < 0.6)) //currently moves along y axis and wants to move along x axis
+    {
+        while (modulus(orientation[0]) >= 0.002)
+        {
+            wb_motor_set_velocity(fr_motor, RATIO * SPEED);
+            wb_motor_set_velocity(fl_motor, SPEED); 
+            wb_robot_step(TIME_STEP);  //send this data to the simulation (and receive the new data for computing); the simulation runs for TIME_STEP ms
+            orientation = wb_compass_get_values(compass);
+            printf("5the orientation of the robot obtained inside our while loop is %lf\n", orientation[0]);
+        }
+        step++;
+        printf("5after while, path[%d] is %d\n", step, path[step]);
+    }
 
   };
-
+  wb_motor_set_velocity(fr_motor, 0);
+  wb_motor_set_velocity(fl_motor, 0); 
   
   wb_robot_cleanup();
 
   return 0;
+}
+
+double modulus(double value)
+{
+    double result;
+    if(value < 0)
+        result = -1 * value;
+    else result = value;
+    return result;
 }
