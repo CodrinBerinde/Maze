@@ -1,19 +1,28 @@
 #VRML_SIM R2023b utf8
-# Box wall 
+# updated wall proto
+# 
+
 
 PROTO wall_proto [
   field SFVec3f translation 0 0 0
+  field SFString name "cube"
 ]
 {
   Solid {
     translation IS translation
-  rotation 0 0 1 0
+    name IS name
+    rotation 0 0 1 0
   children [
     Shape {
       appearance Appearance {
         material Material {
-          ambientIntensity 0.5
-          diffuseColor 0.2 0.2 0.3
+          ambientIntensity 0.6
+          diffuseColor 1 1 1
+        }
+        texture ImageTexture {
+          url [
+            "texture2.jpg"
+          ]
         }
       }
       geometry DEF _WALL Box {
@@ -21,7 +30,6 @@ PROTO wall_proto [
       }
     }
   ]
-  name "wall_piece"
   boundingObject USE _WALL
   }
 }
