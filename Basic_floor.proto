@@ -1,0 +1,25 @@
+#VRML_SIM R2023b utf8
+# Describe the functionality of your PROTO here.
+
+
+PROTO Basic_floor [
+  field SFVec2f size 1 1
+  field SFVec3f translation 0 0 0
+]
+{
+Solid {
+    translation IS translation
+
+  children [
+    Shape {
+      appearance RoughOak {
+      }
+      geometry DEF _FLOOR Plane {
+        size IS size
+      }
+    }
+  ]
+  boundingObject USE _FLOOR
+}
+ 
+}
