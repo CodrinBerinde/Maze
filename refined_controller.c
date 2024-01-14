@@ -40,7 +40,7 @@ int read_path(int **path, double ***absolute_coord) {
 int exit_condition(int req_step, int req_orientation, int req_sign, int step, double **absolute_coord, double *orientation, double *position) {
   if(req_step == 0)
     return (req_sign * (position[req_orientation] - absolute_coord[step + 1][req_orientation]) >= 0.001);
-  return fabs(orientation[req_orientation] <= 0.9999);
+  return (fabs(orientation[req_orientation]) <= 0.9999);
 }
 
 int main(int argc, char **argv) {
