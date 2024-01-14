@@ -2,28 +2,27 @@
   control only the velocity of each motor relying on gps and on compass
  */
 
-//#include <webots/motor.h>
-//#include <webots/robot.h>
-//#include <webots/gps.h>
-//#include <webots/compass.h>
-#include "maze.h"
-#include "structures.h"
-
+#include <webots/motor.h>
+#include <webots/robot.h>
+#include <webots/gps.h>
+#include <webots/compass.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "maze.h"
+#include "structures.h"
 
 #define TIME_STEP 16
 #define SPEED 5
 #define RATIO 1.531
 #define CELL_WIDTH 0.2
 
-const int velocities[3][2] = {{1, 1}, {1, RATIO}, {RATIO, 1}};
+const double velocities[3][2] = {{1, 1}, {1, RATIO}, {RATIO, 1}};
 
 int read_path(int **path, double ***absolute_coord) {
   int steps = 0;
-  FILE *path_file = fopen("../supervisor/input.txt", "r");
-  fscanf(path_file, "%d", steps);
+  FILE *path_file = fopen("../supervisor/path.txt", "r");
+  fscanf(path_file, "%d", &steps);
 
   (*path) = (int *)calloc(sizeof(int), steps);
   (*absolute_coord) = (double **)calloc(sizeof(double *), steps);
@@ -38,14 +37,16 @@ int read_path(int **path, double ***absolute_coord) {
 }
 
 int exit_condition(int req_step, int req_orientation, int req_sign, int step, double **absolute_coord, double *orientation, double *position) {
-  if(req_step == 0)
+  if(req_step == 0) {
     return (req_sign * (position[req_orientation] - absolute_coord[step + 1][req_orientation]) >= 0.001);
+  }
   return (fabs(orientation[req_orientation]) <= 0.9999);
 }
 
 int main(int argc, char **argv) {
+  
   wb_robot_init();
-
+  
   WbDeviceTag fr_motor = wb_robot_get_device("front_right_motor");
   WbDeviceTag fl_motor = wb_robot_get_device("front_left_motor");
   WbDeviceTag gps = wb_robot_get_device("gps");
@@ -70,17 +71,20 @@ int main(int argc, char **argv) {
   double **absolute_coord;
   int total_steps = read_path(&path, &absolute_coord);
   int req_step, req_orientation, req_sign;
+  
+  position = wb_gps_get_values(gps);
+  orientation = wb_compass_get_values(compass);
 
   while(path[step] != -1) {
+    req_step = path[step];
+    req_orientation = (fabs(orientation[0]) > 0.5) ? 1 : 0;
+    req_sign = (position[req_orientation] - absolute_coord[step + 1][req_orientation] < 0) ? -1 : 1;
+    wb_motor_set_velocity(fr_motor, SPEED * velocities[path[step]][0]);
+    wb_motor_set_velocity(fl_motor, SPEED * velocities[path[step]][1]);
+    
     do {
       position = wb_gps_get_values(gps);
       orientation = wb_compass_get_values(compass);
-      req_step = path[step];
-      req_orientation = cos(orientation[0] < 0.6);
-      req_sign = (position[req_orientation] - absolute_coord[step + 1][req_orientation] < 0) ? -1 : 1;
-
-      wb_motor_set_velocity(fr_motor, SPEED * velocities[req_step][0]);
-      wb_motor_set_velocity(fl_motor, SPEED * velocities[req_step][1]);
       wb_robot_step(TIME_STEP);
     } while(exit_condition(req_step, req_orientation, req_sign, step, absolute_coord, orientation, position));
     step++;
