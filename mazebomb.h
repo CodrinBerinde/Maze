@@ -17,9 +17,11 @@ static int is_valid_direction(int x, int y, int width, int height, int **maze, i
 static void bfs(int xstart, int ystart, int width, int height, int **maze, int **parent);
 extern void clear_mem(int height, int ***matrix);
 static int direction_relativization(int current_dir, int prev_dir);
-static void recover_path(int xstop, int ystop, int **parent, char *file_name);
+static int *recover_path(int xstop, int ystop, int **parent, char *file_name);
 extern void print_maze(int width, int height, int **maze);
 extern int **generate_maze(int *width, int *height, int seed);
-extern void solve_maze(int width, int height, int **maze, int xstart, int ystart, int xstop, int ystop, char *file_name);
+extern int *solve_maze(int width, int height, int **maze, int xstart, int ystart, int xstop, int ystop, char *file_name);
+
+static void prtm(int x, int y, int xmax, int ymax, int **maze, int **visited);
 
 #endif

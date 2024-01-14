@@ -108,12 +108,60 @@ void iterative_dfs(int xstart, int ystart, int xmax, int ymax, int **maze, int *
   } while(!is_empty(top));
 }
 
+int call = 0;
+float offst = 0.03;
+
+void prtm(int x, int y, int xmax, int ymax, int **maze, int **visited) {
+  FILE *fp;
+  fp = fopen("latex.txt", "a");
+  fprintf(fp, "\\begin{minipage}[b]{0.16\\textwidth}\n"
+  "  \\centering\n\\begin{tikzpicture}[scale=0.3]\n");
+  for(int row = 0; row < xmax; row++) {
+    fprintf(fp, "  \\draw (%d, %.2f) node[left]{\\tiny \\color{culoaretext}%d\\color{black}};\n", 0, -0.5 - row, row);
+    for(int col = 0; col < ymax; col++) {
+      if(row == 0) {
+        fprintf(fp, "  \\draw (%.2f, %d) node[above]{\\tiny \\color{culoaretext}%d\\color{black}};\n", 0.5 + col, 0, col);
+      }
+      if(maze[row][col] == 1) {
+        fprintf(fp, "  \\fill[fill=culoaretext] (%.2f, %.2f) rectangle (%.2f, %.2f);\n", col + offst, -row - offst, col + 1 - offst, -row - 1 + offst);
+      }
+      else if(visited[row][col] == 1) {
+        fprintf(fp, "  \\fill[fill=visitedcell] (%.2f, %.2f) rectangle (%.2f, %.2f);\n", col + offst, -row - offst, col + 1 - offst, -row - 1 + offst);
+      }
+    }
+  }
+  fprintf(fp, "  \\fill[fill=currentcell] (%.2f, %.2f) rectangle (%.2f, %.2f);\n", y + offst, -x - offst, y + 1 - offst, -x - 1 + offst);
+  for(int dir = 0; dir < 4; dir++) {
+    int xn = x + relative_dir[dir][0];
+    int yn = y + relative_dir[dir][1];
+    if(in_matrix(xn, yn, xmax, ymax) && !visited[xn][yn]) {
+      fprintf(fp, "  \\draw[-stealth, directionarrow, thick] (%.2f, %.2f) -- (%.2f, %.2f);\n", 0.5 + y + ((float)(yn - y))/7, -0.5 - x - ((float)(xn - x))/7, 0.5 + yn, -0.5 - xn);
+    }
+  }
+  fprintf(fp, "\\end{tikzpicture}\n"
+    "\\caption*{%c)}\n"
+  "\\end{minipage}\n"
+  "\\hfill\n", (int)('a') + call % 27);
+  call++;
+  fclose(fp);
+}
+
 void recursive_dfs(int x, int y, int xmax, int ymax, int **maze, int **visited) {
-  int direction;
+  int direction, xante = x, yante = y;
+  printf("HELLOO\n");
+  prtm(x, y, xmax, ymax, maze, visited);
+  int ok = 0;
+  
   while((direction = direction_choice(&x, &y, xmax, ymax, visited)) != -1) {
+    printf("Sunt la %d, %d si am venit din directia %d\n", x, y, direction);
     *(*(visited + x) + y) = 1;
     smash_walls(x, y, direction, maze);
     recursive_dfs(x, y, xmax, ymax, maze, visited);
+    //prtm(x, y, xmax, ymax, maze, visited);
+    ok = 1;
+  }
+  if(ok == 1) {
+    prtm(xante, yante, xmax, ymax, maze, visited);
   }
 }
 
@@ -162,29 +210,27 @@ int direction_relativization(int current_dir, int prev_dir) {
   return 1;
 }
 
-void recover_path(int xstop, int ystop, int **parent, char *file_name) {
+int *recover_path(int xstop, int ystop, int **parent, char *file_name) {
   cell *top = NULL;
   int curr_x = xstop, curr_y = ystop;
-  int next_direction = 0, actual_direction, previous_direction = 0, previous_rel_dir = 0;
-  int length = 2;
+  int next_direction = 0, actual_direction, previous_rel_dir = 0, i = 0;
+  int length = 1;
   while(*(*(parent + curr_x) + curr_y) != -2) {
     top = stack_add(top, *(*(parent + curr_x) + curr_y), 0);
     actual_direction = (*(*(parent + curr_x) + curr_y) + 2) % 4;
     curr_x = curr_x + relative_dir[actual_direction][0] / 2;
     curr_y = curr_y + relative_dir[actual_direction][1] / 2;
-    if(previous_direction == actual_direction)
-      length++;
-    previous_direction = actual_direction;
+    length++;
   }
   
   FILE *path_file = fopen(file_name, "w");
-  fprintf(path_file, "%d\n", length);
   while(!is_empty(top)) {
     actual_direction = top->x;
     if(actual_direction == -2) {
       actual_direction = 0;
     }
     next_direction = (top->link != NULL) ? top->link->x : 0;
+    printf("Actual direction is %d and next %d\n", actual_direction, next_direction);
     
     if(previous_rel_dir == 0) {
       fprintf(path_file, "%d %d %d\n", direction_relativization(actual_direction, next_direction), curr_x, curr_y);
@@ -196,6 +242,20 @@ void recover_path(int xstop, int ystop, int **parent, char *file_name) {
   }
   fprintf(path_file, "%d %d %d\n", -1, curr_x, curr_y);
   fclose(path_file);
+  
+  int *path = (int *)calloc(sizeof(int), length);
+/*
+  while(!is_empty(top)) {
+    *(path + i) = top->x;
+    i++;
+    top = rem(top);
+  }
+  //the first element is 0
+  *path = 0;
+  //the last element marks the end, and is -1
+  *(path + length - 1) = -1;
+*/
+  return path;
 }
 
 void print_maze(int width, int height, int **maze) {
@@ -216,29 +276,46 @@ int **initialize_maze(int width, int height) {
       *(*(maze + row) + column) = ((row % 2 == 1) && (column % 2 == 1)) ? 0 : 1;
     }
   }
+  printf("here\n");
   *(*(maze + 1)) = 0;
   *(*(maze + height - 2) + width - 1) = 0;
   return maze;
 }
 
 int **generate_maze(int *width, int *height, int seed) {
+
   (*width) += ((*width) % 2 == 0) ? 1 : 0;
   (*height) += ((*height) % 2 == 0) ? 1 : 0;
 
   srand(seed);
 
   int **visited = initialize_visited(*width, *height);
+
   int **maze = initialize_maze(*width, *height);
-  *(*(visited + *height - 2) + *width - 2) = 1;
-  recursive_dfs(*height - 2, *width - 2, *height, *width, maze, visited);
+
+  FILE *fp;
+  fp = fopen("latex.txt", "w");
+  fprintf(fp, "\\begin{figure}[!h!b!t]\n"
+  "\\centering\n");
+  fclose(fp);
+  //*(*(visited + *height - 2) + *width - 2) = 1;
+  *(*(visited + 1) + 1) = 1;
+  //recursive_dfs(*height - 2, *width - 2, *height, *width, maze, visited);
+  recursive_dfs(1, 1, *height, *width, maze, visited);
   //iterative_dfs(*height - 2, *width - 2, *height, *width, maze, visited);
   clear_mem(*height, &visited);
+  fp = fopen("latex.txt", "a");
+  fprintf(fp, "\\caption{Maze generation using DFS}\n"
+  "\\label{f1}\n"
+"\\end{figure}\n");
+  fclose(fp);
   return maze;
 }
 
-void solve_maze(int width, int height, int **maze, int xstart, int ystart, int xstop, int ystop, char *file_name) {
+int *solve_maze(int width, int height, int **maze, int xstart, int ystart, int xstop, int ystop, char *file_name) {
   int **parent = initialize_parent(width, height, xstart, ystart);
   bfs(xstart, ystart, width, height, maze, parent);
-  recover_path(xstop, ystop, parent, file_name);
+  int *path = recover_path(xstop, ystop, parent, file_name);
   clear_mem(height, &parent);
+  return path;
 }
